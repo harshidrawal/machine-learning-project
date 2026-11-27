@@ -1,0 +1,25 @@
+# Python environment
+.venv/
+venv/
+env/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Jupyter
+.ipynb_checkpoints/
+
+# macOS
+.DS_Store
+
+# Secrets and environment variables
+.env
+.env.*
+
+# IDE
+.vscode/
+
+# Temporary files
+*.log

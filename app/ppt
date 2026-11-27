@@ -1,0 +1,203 @@
+from pptx import Presentation
+from pptx.util import Inches, Pt
+from pptx.dml.color import RGBColor
+from pptx.enum.text import PP_ALIGN, MSO_ANCHOR
+from pptx.enum.shapes import MSO_SHAPE, MSO_CONNECTOR
+from pathlib import Path
+
+prs = Presentation()
+prs.slide_width = Inches(13.333)
+prs.slide_height = Inches(7.5)
+
+# Palette
+BG = RGBColor(10, 22, 42)
+PANEL = RGBColor(19, 39, 67)
+PANEL2 = RGBColor(24, 51, 83)
+BLUE = RGBColor(48, 126, 226)
+CYAN = RGBColor(55, 205, 216)
+WHITE = RGBColor(246, 249, 255)
+MUTED = RGBColor(178, 194, 216)
+GREEN = RGBColor(67, 194, 142)
+AMBER = RGBColor(245, 184, 76)
+RED = RGBColor(235, 100, 106)
+LINE = RGBColor(52, 79, 112)
+
+def bg(slide):
+    f = slide.background.fill
+    f.solid()
+    f.fore_color.rgb = BG
+
+def textbox(slide, x, y, w, h, text, size=16, color=WHITE, bold=False,
+            align=PP_ALIGN.LEFT, valign=MSO_ANCHOR.TOP, font="Aptos",
+            margin=0.04):
+    sh = slide.shapes.add_textbox(Inches(x), Inches(y), Inches(w), Inches(h))
+    tf = sh.text_frame
+    tf.clear()
+    tf.word_wrap = True
+    tf.margin_left = Inches(margin)
+    tf.margin_right = Inches(margin)
+    tf.margin_top = Inches(margin)
+    tf.margin_bottom = Inches(margin)
+    tf.vertical_anchor = valign
+    p = tf.paragraphs[0]
+    p.alignment = align
+    r = p.add_run()
+    r.text = text
+    r.font.name = font
+    r.font.size = Pt(size)
+    r.font.bold = bold
+    r.font.color.rgb = color
+    return sh
+
+def card(slide, x, y, w, h, fill=PANEL, line=LINE):
+    sh = slide.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, Inches(x), Inches(y), Inches(w), Inches(h))
+    sh.fill.solid()
+    sh.fill.fore_color.rgb = fill
+    sh.line.color.rgb = line
+    sh.line.width = Pt(1)
+    return sh
+
+def header(slide, section, title, sub):
+    textbox(slide, .65, .32, 12, .25, section.upper(), 10, CYAN, True)
+    textbox(slide, .65, .70, 12, .55, title, 27, WHITE, True)
+    textbox(slide, .68, 1.31, 12, .38, sub, 12, MUTED)
+
+def footer(slide, n):
+    textbox(slide, .68, 7.15, 10, .16, "SCAMSHIELD INDIA  •  EXPLAINABLE SCAM & PHISHING DETECTION", 8, MUTED, True)
+    textbox(slide, 12.05, 7.11, .55, .2, f"{n:02d}/04", 9, CYAN, True, PP_ALIGN.RIGHT)
+
+def add_bullets(slide, x, y, w, h, items, size=13, color=WHITE, gap=7):
+    sh = slide.shapes.add_textbox(Inches(x), Inches(y), Inches(w), Inches(h))
+    tf = sh.text_frame
+    tf.clear()
+    tf.word_wrap = True
+    tf.margin_left = Inches(.05)
+    tf.margin_right = Inches(.05)
+    tf.margin_top = Inches(.03)
+    for i, item in enumerate(items):
+        p = tf.paragraphs[0] if i == 0 else tf.add_paragraph()
+        p.text = "• " + item
+        p.font.name = "Aptos"
+        p.font.size = Pt(size)
+        p.font.color.rgb = color
+        p.space_after = Pt(gap)
+    return sh
+
+def arrow(slide, x1, y1, x2, y2, color=CYAN):
+    c = slide.shapes.add_connector(MSO_CONNECTOR.STRAIGHT, Inches(x1), Inches(y1), Inches(x2), Inches(y2))
+    c.line.color.rgb = color
+    c.line.width = Pt(2)
+    c.line.end_arrowhead = True
+    return c
+
+# Slide 1 - Intro / problem
+s = prs.slides.add_slide(prs.slide_layouts[6]); bg(s)
+textbox(s, .72, .48, 7, .25, "PROJECT EXPLANATION  |  AI + CYBER SAFETY", 10, CYAN, True)
+textbox(s, .72, 1.05, 7.1, .72, "ScamShield India", 34, WHITE, True)
+textbox(s, .76, 1.92, 6.6, .95, "An explainable AI system for detecting suspicious messages and phishing URLs.", 19, MUTED)
+card(s, .75, 3.25, 3.65, 2.15)
+textbox(s, 1.02, 3.52, 3.1, .28, "THE PROBLEM", 12, AMBER, True)
+textbox(s, 1.02, 3.98, 3.05, 1.0, "Scam messages exploit urgency, impersonation and deceptive links to steal money or personal information.", 14)
+card(s, 4.65, 3.25, 3.65, 2.15)
+textbox(s, 4.92, 3.52, 3.1, .28, "OUR APPROACH", 12, GREEN, True)
+textbox(s, 4.92, 3.98, 3.05, 1.0, "Analyze message text and embedded URLs, then show a risk score with understandable reasons.", 14)
+card(s, 8.75, .85, 3.85, 4.85, PANEL2, CYAN)
+# shield icon approximation
+shield = s.shapes.add_shape(MSO_SHAPE.PENTAGON, Inches(9.82), Inches(1.45), Inches(1.72), Inches(1.75))
+shield.rotation = 180
+shield.fill.solid(); shield.fill.fore_color.rgb = BLUE
+shield.line.color.rgb = CYAN; shield.line.width = Pt(2)
+textbox(s, 10.05, 1.88, 1.25, .65, "✓", 40, WHITE, True, PP_ALIGN.CENTER, MSO_ANCHOR.MIDDLE)
+textbox(s, 9.15, 3.55, 3.05, .38, "DETECT  •  EXPLAIN  •  WARN", 13, CYAN, True, PP_ALIGN.CENTER)
+textbox(s, 9.25, 4.18, 2.85, .85, "SMS / WhatsApp text\nSuspicious URLs\nLOW • MEDIUM • HIGH risk", 14, WHITE, False, PP_ALIGN.CENTER)
+textbox(s, .82, 6.15, 7.5, .45, "Prototype scope: text messages and URLs; English and Hinglish testing direction.", 11, MUTED)
+footer(s, 1)
+
+# Slide 2 - Methodology and architecture
+s = prs.slides.add_slide(prs.slide_layouts[6]); bg(s)
+header(s, "Methodology", "How the system is built", "A step-by-step pipeline from public datasets to an explainable risk assessment.")
+# process strip
+steps = [
+    ("01  COLLECT", "UCI SMS + URL\ndatasets", BLUE),
+    ("02  PREPARE", "Clean, deduplicate\nand label data", CYAN),
+    ("03  TRAIN", "TF-IDF + Logistic\nRegression models", BLUE),
+    ("04  ANALYZE", "Message rules +\nURL heuristics", AMBER),
+    ("05  PRESENT", "Risk score +\nexplanations", GREEN)
+]
+x_positions = [.55, 3.08, 5.61, 8.14, 10.67]
+for i, (h, b, col) in enumerate(steps):
+    card(s, x_positions[i], 2.25, 2.05, 1.72, PANEL)
+    textbox(s, x_positions[i]+.12, 2.52, 1.81, .3, h, 11, col, True, PP_ALIGN.CENTER)
+    textbox(s, x_positions[i]+.15, 3.03, 1.75, .7, b, 13, WHITE, False, PP_ALIGN.CENTER, MSO_ANCHOR.MIDDLE)
+    if i < 4:
+        arrow(s, x_positions[i]+2.08, 3.1, x_positions[i+1]-.06, 3.1)
+# lower architecture cards
+card(s, .75, 4.55, 3.75, 1.55)
+textbox(s, 1.0, 4.78, 3.2, .28, "SMS CLASSIFIER", 12, BLUE, True)
+textbox(s, 1.0, 5.22, 3.2, .65, "Word + character TF-IDF\nLogistic Regression", 14)
+card(s, 4.78, 4.55, 3.75, 1.55)
+textbox(s, 5.03, 4.78, 3.2, .28, "URL CLASSIFIER", 12, CYAN, True)
+textbox(s, 5.03, 5.22, 3.2, .65, "Character n-gram TF-IDF\nLogistic Regression", 14)
+card(s, 8.82, 4.55, 3.75, 1.55)
+textbox(s, 9.07, 4.78, 3.2, .28, "RULE ENGINE", 12, AMBER, True)
+textbox(s, 9.07, 5.22, 3.2, .65, "Urgency, account threats,\ncredential requests, URL traits", 14)
+textbox(s, .85, 6.42, 11.8, .25, "The three analysis components feed a combined risk score; current fusion uses the highest component score.", 10, MUTED)
+footer(s, 2)
+
+# Slide 3 - datasets and technical implementation
+s = prs.slides.add_slide(prs.slide_layouts[6]); bg(s)
+header(s, "Data & technology", "What data and algorithms power it?", "Two public UCI datasets train separate models for message text and URL patterns.")
+card(s, .72, 2.0, 5.8, 1.62)
+textbox(s, 1.0, 2.24, 5.2, .28, "UCI SMS SPAM COLLECTION", 12, CYAN, True)
+textbox(s, 1.0, 2.7, 5.15, .62, "5,572 raw messages  →  5,169 after cleaning\n4,516 safe  |  653 spam", 15)
+card(s, 6.82, 2.0, 5.8, 1.62)
+textbox(s, 7.1, 2.24, 5.2, .28, "UCI PHIUSIIL PHISHING URL DATASET", 12, CYAN, True)
+textbox(s, 7.1, 2.7, 5.15, .62, "235,795 raw URL records  →  20,000 sampled\n10,000 safe  |  10,000 phishing", 15)
+card(s, .72, 4.0, 3.75, 1.78)
+textbox(s, .98, 4.25, 3.2, .28, "PREPROCESSING", 12, AMBER, True)
+add_bullets(s, .98, 4.68, 3.2, .95, ["Remove missing values and duplicates", "Normalize text and map labels", "Create stratified train/test splits"], 11, gap=4)
+card(s, 4.78, 4.0, 3.75, 1.78)
+textbox(s, 5.04, 4.25, 3.2, .28, "FEATURES & MODELS", 12, BLUE, True)
+add_bullets(s, 5.04, 4.68, 3.2, .95, ["TF-IDF word and character n-grams", "Logistic Regression classifiers", "Joblib saves trained pipelines"], 11, gap=4)
+card(s, 8.84, 4.0, 3.75, 1.78)
+textbox(s, 9.1, 4.25, 3.2, .28, "APPLICATION STACK", 12, GREEN, True)
+add_bullets(s, 9.1, 4.68, 3.2, .95, ["Python 3.10 and Pandas", "Scikit-learn and regular expressions", "Streamlit web interface"], 11, gap=4)
+textbox(s, .82, 6.25, 11.8, .35, "Project labels: 0 = safe / legitimate  •  1 = scam / phishing", 11, MUTED)
+footer(s, 3)
+
+# Slide 4 - results and demo / limitations
+s = prs.slides.add_slide(prs.slide_layouts[6]); bg(s)
+header(s, "Evaluation & demonstration", "What have we achieved?", "Both baseline classifiers are trained and integrated into a local Streamlit prototype.")
+card(s, .72, 2.0, 5.78, 1.9, PANEL2)
+textbox(s, 1.0, 2.25, 5.1, .28, "SMS MODEL  |  ONE 70:30 SPLIT", 11, CYAN, True)
+textbox(s, 1.0, 2.72, 1.8, .52, "98.45%", 26, WHITE, True)
+textbox(s, 2.85, 2.73, 3.1, .6, "Accuracy\n93.88% scam precision, recall & F1", 12, MUTED)
+card(s, 6.82, 2.0, 5.78, 1.9, PANEL2)
+textbox(s, 7.1, 2.25, 5.1, .28, "URL MODEL  |  ONE 70:30 SPLIT", 11, CYAN, True)
+textbox(s, 7.1, 2.72, 1.8, .52, "99.10%", 26, WHITE, True)
+textbox(s, 8.95, 2.73, 3.1, .6, "Accuracy\n100% scam precision; 98.20% recall", 12, MUTED)
+card(s, .72, 4.25, 7.3, 1.85)
+textbox(s, 1.0, 4.48, 6.7, .28, "LIVE DEMO WORKFLOW", 12, GREEN, True)
+add_bullets(s, 1.0, 4.9, 6.65, 1.0, [
+    "Paste an SMS / WhatsApp message into the Streamlit app",
+    "Inspect the message score, rule flags and extracted URLs",
+    "Review the LOW / MEDIUM / HIGH warning and safety advice"
+], 12, gap=5)
+card(s, 8.35, 4.25, 4.25, 1.85, RGBColor(58, 47, 35), AMBER)
+textbox(s, 8.62, 4.48, 3.7, .28, "LIMITATIONS & NEXT WORK", 12, AMBER, True)
+add_bullets(s, 8.62, 4.9, 3.65, 1.0, [
+    "Preliminary split results, not real-world guarantees",
+    "Check duplicates and data leakage",
+    "Expand Indian / Hinglish data and calibrate thresholds"
+], 11, gap=4)
+textbox(s, .82, 6.42, 11.7, .25, "Run locally:  streamlit run app/app.py     •     Prototype, not a substitute for official verification", 10, MUTED)
+footer(s, 4)
+
+prs.core_properties.title = "ScamShield India - Project Explanation"
+prs.core_properties.subject = "Four-slide explanation of the AI scam message and phishing URL detector"
+prs.core_properties.author = "ScamShield India Project"
+prs.core_properties.keywords = "Scam detection, phishing URL, TF-IDF, Logistic Regression, Streamlit"
+
+out = Path("/mnt/data/ScamShield_India_Project_Explanation_4_Slides.pptx")
+prs.save(out)
+print(f"PowerPoint created: {out}")
